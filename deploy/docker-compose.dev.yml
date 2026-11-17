@@ -1,0 +1,78 @@
+# Local stack. Run from the project root:
+#   docker compose -f deploy/docker-compose.dev.yml up --build
+#
+#   storefront  http://localhost:3000
+#   API         http://localhost:8000/api/v1/health/
+# db, backend, and worker read backend/.env. frontend reads frontend/.env.
+name: softladylux
+
+services:
+  db:
+    container_name: softladylux-dev-db
+    image: postgres:16
+    env_file: ../backend/.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    container_name: softladylux-dev-backend
+    user: root
+    build:
+      context: ../backend
+      args:
+        INSTALL_DEV: "1"
+    command: python manage.py runserver 0.0.0.0:8000
+    env_file: ../backend/.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend:/app
+      - media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    container_name: softladylux-dev-worker
+    user: root
+    build:
+      context: ../backend
+      args:
+        INSTALL_DEV: "1"
+    command: python manage.py qcluster
+    env_file: ../backend/.env
+    environment:
+      RUN_MIGRATIONS: "0"
+    volumes:
+      - ../backend:/app
+      - media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    container_name: softladylux-dev-frontend
+    build:
+      context: ../frontend
+      target: dev
+    env_file: ../frontend/.env
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+      - media:/media:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  media:

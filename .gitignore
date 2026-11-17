@@ -1,0 +1,4 @@
+.env
+picture_to_upload
+node_modules
+**/node_modules
