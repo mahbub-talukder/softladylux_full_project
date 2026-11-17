@@ -253,7 +253,7 @@ else
       -e "s|^DATABASE_URL=.*|DATABASE_URL=postgres://softladylux:$dbpw@db:5432/softladylux|" \
       -e "s|^DEFAULT_FROM_EMAIL=.*|DEFAULT_FROM_EMAIL=SoftLadyLux <no-reply@$DOMAIN>|" \
       backend/.env.production.example > "$be.tmp"
-  ! grep -q 'REPLACE_ME' "$be.tmp" || { grep -n REPLACE_ME "$be.tmp"; die "placeholders left in backend/.env"; }
+  ! grep -q '^[^#]*REPLACE_ME' "$be.tmp" || { grep -n '^[^#]*REPLACE_ME' "$be.tmp"; die "placeholders left in backend/.env"; }  # comments may mention REPLACE_ME
   chmod 600 "$be.tmp"; mv "$be.tmp" "$be"
   ok "backend/.env created (new secret key, database password, admin path)"
 fi
@@ -264,7 +264,7 @@ if [ -f "$fe" ] && grep -q "^NUXT_PUBLIC_SITE_URL=https://$DOMAIN\$" "$fe"; then
 else
   [ -f "$fe" ] && { mv "$fe" "$fe.dev-uploaded.$ts"; info "uploaded dev frontend/.env moved to $fe.dev-uploaded.$ts"; }
   sed -e "s|^NUXT_PUBLIC_SITE_URL=.*|NUXT_PUBLIC_SITE_URL=https://$DOMAIN|" frontend/.env.production.example > "$fe.tmp"
-  ! grep -q 'REPLACE_ME' "$fe.tmp" || die "placeholders left in frontend/.env"
+  ! grep -q '^[^#]*REPLACE_ME' "$fe.tmp" || die "placeholders left in frontend/.env"
   chmod 600 "$fe.tmp"; mv "$fe.tmp" "$fe"
   ok "frontend/.env created"
 fi
