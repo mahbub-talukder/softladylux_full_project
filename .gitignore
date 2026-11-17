@@ -4,3 +4,8 @@ node_modules
 **/node_modules
 backend
 frontend
+# deploy/deploy.sh local state, backups and logs
+deploy/backups/
+deploy/.deploy-state/
+deploy/logs/
+deploy/deploy.conf

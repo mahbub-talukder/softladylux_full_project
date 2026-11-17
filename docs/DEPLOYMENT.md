@@ -4,6 +4,19 @@ Hosting and domain are not decided, so this guide is generic: any Linux server w
 Compose v2 works. Services: `db` (PostgreSQL 16), `backend` (Django/Gunicorn), `worker` (Django-Q2),
 `frontend` (Nuxt), `nginx`. There is no Redis. Only nginx publishes ports.
 
+## 0. One-command deploy (softladylux.com)
+From your local machine, in the project folder:
+```
+./deploy/deploy.sh            # everything; re-run it to resume at the stage that failed
+./deploy/deploy.sh --status   # which stages are done
+./deploy/deploy.sh --from 03 --skip-data   # later code-only redeploy (never touches prod data)
+```
+It backs up the local dev database and media, prepares the server (Docker, swap, firewall, clock),
+syncs the code, writes the production `.env` files, builds, restores the data, issues the Let's
+Encrypt certificate and runs the smoke test. Settings (server, domain, email) are at the top of the
+script or in `deploy/deploy.conf`. It needs SSH key login: run `ssh-copy-id -p 22 root@<server>` once.
+Sections 1–8 below describe the same steps by hand.
+
 ## 1. Server
 - Linux with Docker Engine 24+ and the Compose plugin; 2 vCPU, 2 GB RAM, 20 GB disk is enough to start
   (SRS §9: up to 5,000 products, 50,000 orders a year, 100 concurrent shoppers on one server).
@@ -28,24 +41,26 @@ Fill in every `REPLACE_ME` (each file explains its values). Generate secrets wit
 The backend refuses to start while a value is unsafe (placeholder secret, `DEBUG=true`, default admin
 path, open `ALLOWED_HOSTS`, insecure cookies). Check by hand:
 ```
-docker compose -f deploy/docker-compose.yml run --rm --no-deps -e RUN_MIGRATIONS=0 backend python -m apps.core.envcheck
+docker compose -f deploy/docker-compose.prod.yml run --rm --no-deps -e RUN_MIGRATIONS=0 backend python -m apps.core.envcheck
 ```
 Warnings (console email, fake SMS) do not block but mean those features are not live yet.
 Set `NUXT_PUBLIC_SITE_URL` in `frontend/.env` so sitemap and canonical URLs use the public origin.
 
 ## 4. TLS: pick one
-**A. Nginx terminates TLS (default).** Put `fullchain.pem` and `privkey.pem` in `deploy/certs/`
-(see the README there; the folder is git-ignored). Start:
+**A. Nginx terminates TLS (default).** The `certbot` service renews a Let's Encrypt certificate twice a
+day and copies it into `deploy/certs/`; nginx reloads every 6 h. `deploy.sh` issues the first one. Or
+put your own `fullchain.pem` and `privkey.pem` in `deploy/certs/` (see the README there; the folder
+is git-ignored). Start:
 ```
-docker compose -f deploy/docker-compose.yml up -d --build
+docker compose -f deploy/docker-compose.prod.yml up -d --build
 ```
 Port 80 redirects to 443 (except `/api/v1/health/`, kept for uptime checks). HSTS is sent for this host only (not subdomains). To renew,
-replace the two files and run `docker compose -f deploy/docker-compose.yml exec nginx nginx -s reload`.
+replace the two files and run `docker compose -f deploy/docker-compose.prod.yml exec nginx nginx -s reload`.
 
 **B. A provider proxy or load balancer terminates TLS.** The proxy must forward plain HTTP to port 80
 and set `X-Forwarded-Proto: https`; only the proxy may reach that port.
 ```
-docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.proxy-tls.yml up -d --build
+docker compose -f deploy/docker-compose.prod.yml -f deploy/docker-compose.proxy-tls.yml up -d --build
 ```
 Django then sees HTTPS and sets HSTS and secure cookies.
 
@@ -54,11 +69,11 @@ Use `HTTP_PORT` / `HTTPS_PORT` to change the published ports.
 ## 5. First run
 The backend applies migrations and creates the cache table on start. Wait for `healthy`:
 ```
-docker compose -f deploy/docker-compose.yml ps
+docker compose -f deploy/docker-compose.prod.yml ps
 ```
 Create the Owner account (password from a prompt, or `OWNER_PASSWORD` in the environment):
 ```
-docker compose -f deploy/docker-compose.yml exec backend python manage.py create_owner --email owner@your-domain --name "Owner Name"
+docker compose -f deploy/docker-compose.prod.yml exec backend python manage.py create_owner --email owner@your-domain --name "Owner Name"
 ```
 Sign in at `https://your-domain/admin/login`, then fill **Settings** (company, address, phone, support
 hours, WhatsApp/Messenger, bKash/Nagad numbers, delivery fees, GTM ID, SMS) and upload the logo, slides
@@ -68,7 +83,7 @@ and products. Until real values are entered the storefront shows clearly marked 
 Use a separate server (or the same server with another project name and ports) and a staging
 domain. For realistic content run the demo seed there only:
 ```
-docker compose -f deploy/docker-compose.yml exec backend python manage.py seed_demo --i-know-this-is-not-production
+docker compose -f deploy/docker-compose.prod.yml exec backend python manage.py seed_demo --i-know-this-is-not-production
 ```
 (`--reset` hides the demo products again; they cannot be deleted because their stock history is
 immutable.) The photos are generated line drawings. To use your own licensed photos add
@@ -78,7 +93,7 @@ immutable.) The photos are generated line drawings. To use your own licensed pho
 ## 7. Upgrade
 ```
 git -C backend pull && git -C frontend pull
-docker compose -f deploy/docker-compose.yml up -d --build
+docker compose -f deploy/docker-compose.prod.yml up -d --build
 ```
 Take a backup first (see `docs/RUNBOOK.md`). Migrations run automatically on backend start. Roll back by
 checking out the previous commits, rebuilding, and (only if a migration must be undone) restoring the

@@ -11,6 +11,6 @@ self-signed pair:
     openssl req -x509 -nodes -newkey rsa:2048 -days 30 -keyout privkey.pem -out fullchain.pem \
       -subj "/CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
 
-Renew by replacing the two files and running `docker compose ... exec nginx nginx -s reload`.
+With Let's Encrypt the certbot service renews them for you. Otherwise renew by replacing the two files and running `docker compose ... exec nginx nginx -s reload`.
 If TLS is terminated by a provider's proxy or load balancer instead, use
 `docker-compose.proxy-tls.yml` and ignore this folder (see docs/DEPLOYMENT.md).
