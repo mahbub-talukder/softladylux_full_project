@@ -69,8 +69,13 @@ RSYNC_SSH="ssh -p $SSH_PORT -o ControlMaster=auto -o ControlPath=$CP -o ControlP
 r() { ssh "${SSH_OPTS[@]}" "$SSH_USER@$SERVER" "$@"; }
 
 # remote <<'EOF' ... EOF : run a bash script on the server with the settings and helpers predefined.
+# The script travels as a command argument (base64), NOT on stdin: a `docker exec -i` inside it would
+# otherwise read the rest of the script as its input and bash would stop early, "successfully".
+# It must also reach its last line, which prints a marker; anything else counts as a failure.
+REMOTE_DONE="  · server step complete"
 remote() {
-  {
+  local script out b64
+  script="$({
     printf 'set -Eeuo pipefail\n'
     printf '%s=%q\n' REMOTE_DIR "$REMOTE_DIR" REMOTE_BK "$REMOTE_BK" DOMAIN "$DOMAIN" WWW "$WWW" \
       LE_EMAIL "$LE_EMAIL" STAMP "${STAMP:-}" FORCE_DB "$FORCE_DB" SSH_PORT "$SSH_PORT" \
@@ -98,7 +103,13 @@ wait_healthy() {  # wait_healthy <seconds> <container>...
 mkdir -p "$REMOTE_DIR"; cd "$REMOTE_DIR"
 PRE
     cat
-  } | ssh "${SSH_OPTS[@]}" "$SSH_USER@$SERVER" bash -s
+    printf 'echo %q\n' "$REMOTE_DONE"
+  })"
+  b64="$(printf '%s\n' "$script" | base64 -w0)"
+  out="$(mktemp)"
+  ssh "${SSH_OPTS[@]}" "$SSH_USER@$SERVER" "bash -c \"\$(echo $b64 | base64 -d)\"" < /dev/null | tee "$out"
+  grep -qxF "$REMOTE_DONE" "$out" || { rm -f "$out"; die "the server script stopped before its end (see output above)"; }
+  rm -f "$out"
 }
 
 # Exact per-table row counts; the same SQL runs locally (backup) and on the server (after restore).
@@ -357,10 +368,9 @@ EOF
 stage_11() {
   remote <<'EOF'
 info "starting the stack (the backend runs migrations on start) …"
-dc up -d --remove-orphans
-if ! wait_healthy 300 softladylux-prod-db softladylux-prod-backend softladylux-prod-worker softladylux-prod-frontend softladylux-prod-nginx softladylux-prod-certbot; then
+if ! dc up -d --remove-orphans || ! wait_healthy 300 softladylux-prod-db softladylux-prod-backend softladylux-prod-worker softladylux-prod-frontend softladylux-prod-nginx softladylux-prod-certbot; then
   dc ps
-  for s in backend worker frontend nginx; do echo "--- $s"; dc logs --tail=30 "$s"; done
+  for s in backend worker frontend nginx; do echo "--- $s"; dc logs --tail=60 "$s"; done
   die "the stack did not become healthy within 5 minutes (logs above)"
 fi
 dc ps --format 'table {{.Service}}\t{{.Status}}' | sed 's/^/  /'
