@@ -456,7 +456,7 @@ stage_15() {
   info "Data backup used:  $BKDIR/${STAMP:-none} (copy on the server: $REMOTE_BK/${STAMP:-none})"
   info "Log of this run:   $LOG"
   say "  Next steps:"
-  info "• Fill the SMTP settings in backend/.env (email is off until then), then: --from 06"
+  info "• Fill the SMTP settings in backend/.env (email is off until then), then: ./deploy/deploy.sh --from 11 --skip-data"
   info "• Copy the backups volume off the server regularly (docs/RUNBOOK.md)"
   info "• Change the root password: it was shared in plain text"
   info "• Code-only redeploy later:  ./deploy/deploy.sh --from 03 --skip-data"
