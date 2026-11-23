@@ -203,7 +203,7 @@ One record (singleton) holds all owner/company data. Everything on the storefron
 
 | ID | Requirement |
 |---|---|
-| WEB-01 | **Hero carousel slides:** image (desktop and optional mobile crop), eyebrow text, heading, sub-text, button label, link target (category, product, URL), sort order, on/off switch. At least 1, at most 8 active slides shown; the carousel advances every **3 seconds** (v1.6). No date scheduling. (SD-17) |
+| WEB-01 | **Hero carousel slides:** image (desktop and optional mobile crop), eyebrow text, heading, sub-text, button label, link target (category, product, URL), sort order, on/off switch. At least 1, at most 8 active slides shown; the carousel advances every **5 seconds** (v1.11; was 3 s in v1.6) and only to a slide whose picture has loaded. No date scheduling. (SD-17) |
 | WEB-02 | **Banners:** four fixed placements, edit only: `home_promo` and `home_offer` (shown side by side, whole and uncropped in the uploaded picture's own proportions), `signature` (the big Signature collection panel; the line-art panel is the fallback when no image is set) and `popup` (WEB-11); image, heading, text, button label, link, on/off switch. Other placements (category header, size-finder band) are not editable in v1. (SD-17, v1.6) |
 | WEB-03 | **Category tiles:** each category has a tile image (used by the home category carousel), title, order, visibility. The home category carousel (six tiles on desktop, arrows beside the heading) moves right-to-left one tile every **3 seconds** in an endless loop, can be dragged with the mouse (with flick momentum) or swiped on touch screens, pauses on hover, focus, touch and drag, and does not move for visitors who prefer reduced motion. (v1.6) |
 | WEB-04 | **Video gallery:** title, video URL (YouTube/Facebook/direct), thumbnail, order, active. |
@@ -214,7 +214,7 @@ One record (singleton) holds all owner/company data. Everything on the storefron
 | WEB-09 | Image upload rules: JPG/PNG/WebP, max 5 MB each; the original is stored and display sizes are generated at request time by Nuxt Image with caching; recommended dimensions are shown beside each upload field; alt text is required for accessibility. (SD-02) |
 | WEB-10 | Changes go live on save (storefront caches are invalidated). There is no date scheduling in v1; the owner switches items on or off manually. (SD-17) |
 | WEB-11 | **Promotional Ads Panel** (v1.6): Admin → Website content → "Promotional Ads Panel" edits one popup (the `popup` banner): image (required to show), heading, text, button label and link, on/off. While it is on, the home page opens it as a dialog shortly after **every full load**; it closes with ×, Esc, the backdrop or "Continue browsing". |
-| WEB-12 | (v1.11) Hero slides change with a seamless slide (no blank frame; neighbours preloaded). On phones (< 640 px) the picture box takes the mobile image's aspect ratio (or the desktop image's), clamped 4:5 to 16:9, so the full image shows uncropped. |
+| WEB-12 | (v1.11) Hero slides change with a seamless slide (no blank frame): every slide picture is preloaded and decoded, slides stay rendered, autoplay waits for a picture that is not ready, and the text cross-fades. On phones (< 640 px) the picture box takes the mobile image's aspect ratio (or the desktop image's), clamped 4:5 to 16:9, so the full image shows uncropped. |
 
 ### 4.3 Catalogue (CAT)
 
@@ -232,7 +232,7 @@ One record (singleton) holds all owner/company data. Everything on the storefron
 | CAT-10 | **Search:** by name, SKU, category, tags; suggestions dropdown while typing (top 6 matches with image and price); Bangla/English transliteration later. Sub-category names are also searched. |
 | CAT-10a | (v1.11) Below `md` the search panel lists **Products** first, then Suggestions/Browse. |
 | CAT-11 | **Product detail page:** gallery with zoom, variant selectors (size, colour), live price and availability (In stock / Only N left / Out of stock), quantity, Add to bag, Add to wishlist, size guide link, details tabs, delivery info (from settings), related products. |
-| CAT-12 | (v1.11, replaced) **Buy** on cards (cart icon + "Buy") opens a compact product dialog (bottom sheet on phones, centred modal on wider screens): photo, name, price, colour choices, size chips (sold-out disabled), size-guide link, quantity. **Add to Cart** adds and closes; **Checkout Now** adds and opens `/checkout` with the whole bag. Both have icons and stay disabled until every required option is chosen; a single-variant product is preselected. |
+| CAT-12 | (v1.11, replaced) **Buy** on cards (cart icon + "Buy") opens a compact product dialog (bottom sheet on phones, centred modal on wider screens): zoomable photo (CAT-27 controls), name, price, colour choices, size chips (sold-out disabled), size-guide link, quantity. **Add to Cart** adds and closes; **Checkout Now** (left) adds and opens `/checkout` with the whole bag; **Add to Cart** sits on the right. Both have icons and stay disabled until every required option is chosen, with a red prompt ("Please select a size"); a single-variant product is preselected. |
 | CAT-13 | Out-of-stock variants are visible but disabled; a product with no available variants shows "Sold out". |
 | CAT-14 | Deleting a product that has been ordered only deactivates it. |
 | CAT-15 | Bulk actions in admin: publish/unpublish, change category, set flag, export CSV.; changing category requires choosing a new sub-category (CAT-21) |
@@ -297,7 +297,7 @@ One record (singleton) holds all owner/company data. Everything on the storefron
 | CHK-09 | Duplicate-submit protection (idempotency key per checkout attempt). |
 | CHK-10 | COD orders skip payment verification and follow the same Draft → Confirmed flow. The customer pays the courier on delivery; the admin records collection at Delivered. |
 | CHK-11 | (v1.11) **Guest mobile verification:** a guest must verify the checkout number with a **4-digit SMS OTP** before placing an order, unless the number is already verified or belongs to a registered account; logged-in customers skip. Code valid 5 min, 3 wrong attempts kill it, resend after 60 s, at most 5 codes per number per hour and 10 per day, per-IP limit, stored hashed. Success stores the number in verified phones; an order from an unverified guest number is refused (`phone_unverified`). The owner can switch the check off in Admin → Settings → SMS (`checkout_otp_enabled`, default on), e.g. while SMS is not configured. |
-| CHK-12 | (v1.11) Payment method cards show the official bKash and Nagad marks and a bank icon beside the name. |
+| CHK-12 | (v1.11) Payment method cards are compact (logo above the name, tick when chosen): two per row on phones, all on one line from 640 px. They show the official bKash and Nagad marks and a bank icon. |
 
 ### 4.7 Order management (ORD)
 
@@ -433,7 +433,7 @@ One record (singleton) holds all owner/company data. Everything on the storefron
 | NTF-07 | (v1.11) **SMS log:** every SMS sent through the provider is recorded with date/time, receiver, message, source (Registration OTP, Password reset OTP, Checkout OTP, Order received, Admin test), status (**Pending → In Progress → Sent / Failed**), provider transaction ID and error reason. OTP codes are masked. Logging never blocks or fails a send. |
 | STF-UI-01 | (v1.11) Header logo height: mobile 2.75rem, tablet 3.5rem, desktop 4rem. |
 | STF-UI-02 | (v1.11) Footer shows an icon for each configured social link with a subtle hover lift; footer text is near-white (contrast ≥ 7:1). |
-| STF-UI-03 | (v1.11) Product cards and lazily loaded sections fade in and move up once on entering the viewport (opacity/transform only, one shared observer, off under reduced motion, visible without JS). |
+| STF-UI-03 | (v1.11) Product cards and lazily loaded sections fade in and move up once on entering the viewport, including those on the first screen (inline head script before first paint; opacity/transform only, one shared observer, off under reduced motion, visible without JS). Header shortcut icons get the footer icons' hover (coloured disc, lift). |
 | STF-UI-04 | (v1.11) Opening a product page starts at the top; back/forward restores the saved position. |
 
 ### 4.15 Storefront pages (STF)
