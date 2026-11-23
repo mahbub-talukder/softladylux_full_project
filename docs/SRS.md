@@ -15,6 +15,7 @@
 | Revision         | 1.8 (2026-11-17, owner decision: SMS and Steadfast credentials are shown in Admin → Settings, masked with a show/hide toggle, instead of write-only; still never logged, audited or public. Changes ACC-02, CRR-01, §6.) |
 | Revision         | 1.9 (2026-11-17: owner-selectable font pairings for the storefront and the admin panel from a fixed catalogue of 9, THM-20 to THM-26; THM-15 and §1.3 changed; §6/§7; scenarios 41–45. Change record: `SRS_AMENDMENT_v1.9_DRAFT.md`) |
 | Revision         | 1.10 (2026-11-17: per-pairing font tuning with `font-size-adjust` (width-matched to the original design), Compact/Standard/Large text size per area, responsive guarantee and audit, THM-27 to THM-31; §6/§7; scenarios 46–50. Change record: `SRS_AMENDMENT_v1.10_DRAFT.md`) |
+| Revision         | 1.11 (2026-11-23, client request: guest checkout SMS OTP with verified numbers CHK-11; Bank payment method; payment logos CHK-12; SMS log NTF-07 / ADM-14 with permission `sms_log.view`; Buy dialog replaces Quick Add CAT-12; product image zoom CAT-27; seamless hero and uncropped mobile hero WEB-12; footer social icons, fade-in-up, product-page scroll STF-UI-01..04; second product Save ADM-13; Steadfast-aware Move to Shipping ORD-14; scenarios 51–61. Change record: `SRS_AMENDMENT_v1.11_DRAFT.md`) |
 
 Requirement IDs use the pattern `MODULE-NN`. Words: **must** = mandatory for v1, **should** = desirable for v1, **later** = explicitly out of v1.
 
@@ -142,6 +143,7 @@ The frontend is a Nuxt 3 (Vue 3) application with server-side rendering for the 
 | `theme.manage` | Theme colours | – |
 | `courier.view` | Courier dashboard, Steadfast parcel lists and return requests (v1.7) | ✔ |
 | `courier.manage` | Book or retry Steadfast parcels, bulk booking, refresh, pickup and return requests (v1.7) | – |
+| `sms_log.view` | View the SMS log (v1.11) | – |
 
 **Owner-only (cannot be delegated):** create and deactivate Staff, reset passwords, edit permissions, and view the audit log.
 
@@ -212,6 +214,7 @@ One record (singleton) holds all owner/company data. Everything on the storefron
 | WEB-09 | Image upload rules: JPG/PNG/WebP, max 5 MB each; the original is stored and display sizes are generated at request time by Nuxt Image with caching; recommended dimensions are shown beside each upload field; alt text is required for accessibility. (SD-02) |
 | WEB-10 | Changes go live on save (storefront caches are invalidated). There is no date scheduling in v1; the owner switches items on or off manually. (SD-17) |
 | WEB-11 | **Promotional Ads Panel** (v1.6): Admin → Website content → "Promotional Ads Panel" edits one popup (the `popup` banner): image (required to show), heading, text, button label and link, on/off. While it is on, the home page opens it as a dialog shortly after **every full load**; it closes with ×, Esc, the backdrop or "Continue browsing". |
+| WEB-12 | (v1.11) Hero slides change with a seamless slide (no blank frame; neighbours preloaded). On phones (< 640 px) the picture box takes the mobile image's aspect ratio (or the desktop image's), clamped 4:5 to 16:9, so the full image shows uncropped. |
 
 ### 4.3 Catalogue (CAT)
 
@@ -227,8 +230,9 @@ One record (singleton) holds all owner/company data. Everything on the storefron
 | CAT-08 | **Size chart:** admin-managed tables (band/cup, apparel, panty) used by the size guide page. The size calculator uses configurable thresholds (defaults from the design). |
 | CAT-09 | **Listing page** per category and for Offers/New/Search: filters (on a category page: sub-category of that category, see CAT-20; on Offers/New/Search pages: category; size, colour, collection, price range, availability), sort (featured, newest, price low-high, price high-low), pagination with "Load more" showing "Showing X of Y". Filters are reflected in the URL query string so results are shareable. |
 | CAT-10 | **Search:** by name, SKU, category, tags; suggestions dropdown while typing (top 6 matches with image and price); Bangla/English transliteration later. Sub-category names are also searched. |
+| CAT-10a | (v1.11) Below `md` the search panel lists **Products** first, then Suggestions/Browse. |
 | CAT-11 | **Product detail page:** gallery with zoom, variant selectors (size, colour), live price and availability (In stock / Only N left / Out of stock), quantity, Add to bag, Add to wishlist, size guide link, details tabs, delivery info (from settings), related products. |
-| CAT-12 | **Quick Add** on cards: one-tap add of the default variant; if there are multiple sizes, an inline size picker opens first. |
+| CAT-12 | (v1.11, replaced) **Buy** on cards (cart icon + "Buy") opens a compact product dialog (bottom sheet on phones, centred modal on wider screens): photo, name, price, colour choices, size chips (sold-out disabled), size-guide link, quantity. **Add to Cart** adds and closes; **Checkout Now** adds and opens `/checkout` with the whole bag. Both have icons and stay disabled until every required option is chosen; a single-variant product is preselected. |
 | CAT-13 | Out-of-stock variants are visible but disabled; a product with no available variants shows "Sold out". |
 | CAT-14 | Deleting a product that has been ordered only deactivates it. |
 | CAT-15 | Bulk actions in admin: publish/unpublish, change category, set flag, export CSV.; changing category requires choosing a new sub-category (CAT-21) |
@@ -243,6 +247,7 @@ One record (singleton) holds all owner/company data. Everything on the storefron
 | CAT-24 | **Product weight** (v1.7): every product has a weight in grams (whole number, 1–30,000) on the product form. New products default to 100 g; existing products were set to 100 g when v1.7 was deployed. The weight is never blank. |
 | CAT-25 | **Variant weight override** (v1.7): a variant may have its own weight (same bounds); blank means the product weight. Effective weight = variant weight, else product weight. The admin variant table has a "Weight (g)" column. |
 | CAT-26 | **Weight on orders** (v1.7): each order line copies the variant's effective weight at placement (snapshot, rule 10). Order total weight = Σ line weight × quantity, shown on admin order detail and the delivery slip (ORD-08). Lines placed before v1.7 were set to 100 g. |
+| CAT-27 | (v1.11) **Product image zoom** on the product page: + / − buttons (1× to 4×, step 0.5) and reset on all screens; two-finger pinch and drag-to-pan on touch; Ctrl/⌘ + wheel on desktop (plain wheel scrolls the page); double-tap/double-click toggles 2×. Changing photo resets the zoom. |
 
 ### 4.4 Customer accounts (ACC)
 
@@ -284,13 +289,15 @@ One record (singleton) holds all owner/company data. Everything on the storefron
 | CHK-01 | Guest or logged-in checkout. Fields: full name, phone (BD format `01XXXXXXXXX`, validated), email (optional for guests, used for notices), delivery area (Inside Dhaka / Outside Dhaka), district, thana/area, address line, order note. |
 | CHK-02 | The delivery fee is looked up from site settings by the chosen area and shown immediately; the total is recomputed server-side. |
 | CHK-03 | **Payment methods:** bKash, Nagad, Cash on Delivery (if enabled in settings). |
-| CHK-04 | For bKash/Nagad the screen shows the merchant number and instructions from settings; the customer pays by send-money, then enters the **sender number** and the **TrxID**. Both are required for these methods. |
+| CHK-04 | For bKash/Nagad the screen shows the merchant number and instructions from settings; the customer pays by send-money, then enters the **sender number** and the **TrxID**. Both are required for these methods. (v1.11) For **Bank** the screen shows bank name, account name, account number, branch and routing number; the customer enters the **transaction/reference ID** (letters, digits, `-`, 6–30) and the **account holder name**, both required. |
 | CHK-05 | TrxID format check (alphanumeric, 8–12 chars), and uniqueness check per method: a TrxID already used on another payment is rejected with a message. |
 | CHK-06 | On submit the server, in one transaction: validates every line against current price and **on-hand** stock; creates the order in **Draft** with a unique order number; snapshots line prices, names, variant labels, address, fees, and coupon; creates a payment record (Pending); redeems the coupon; clears the cart. If any line is unavailable, nothing is created and the customer is told which line to fix. Stock is checked but not held or deducted until Confirm (SD-07). |
 | CHK-07 | Confirmation page shows order number, summary, what happens next (owner will verify the payment and confirm), and contact details. An email confirmation is sent if an email is present. |
 | CHK-08 | Order number format: `SLL-YYMMDD-NNNN` (daily sequence). Unique, never reused. |
 | CHK-09 | Duplicate-submit protection (idempotency key per checkout attempt). |
 | CHK-10 | COD orders skip payment verification and follow the same Draft → Confirmed flow. The customer pays the courier on delivery; the admin records collection at Delivered. |
+| CHK-11 | (v1.11) **Guest mobile verification:** a guest must verify the checkout number with a **4-digit SMS OTP** before placing an order, unless the number is already verified or belongs to a registered account; logged-in customers skip. Code valid 5 min, 3 wrong attempts kill it, resend after 60 s, at most 5 codes per number per hour and 10 per day, per-IP limit, stored hashed. Success stores the number in verified phones and returns a signed token (30 min, bound to the number); an order from an unverified guest number without a valid token is refused (`phone_unverified`). |
+| CHK-12 | (v1.11) Payment method cards show the official bKash and Nagad marks and a bank icon beside the name. |
 
 ### 4.7 Order management (ORD)
 
@@ -327,19 +334,20 @@ One record (singleton) holds all owner/company data. Everything on the storefron
 | ORD-11 | Delivered orders become read-only except for the Return action. |
 | ORD-12 | **Stale Drafts:** Drafts older than the stale-draft hours (default 24, Settings) are highlighted in the order list and on the dashboard so staff can follow up or cancel them manually. There is no automatic cancellation in v1. Drafts hold no stock, so a stale Draft costs only clutter and coupon usage, which staff release by cancelling. (SD-07) |
 | ORD-13 | Order totals: `total = subtotal − coupon discount + delivery fee`. Product discounts are already inside the line prices. Delivery fee is never discounted by coupons in v1. |
+| ORD-14 | (v1.11) On a Confirmed order **Move to Shipping** books with Steadfast when it is configured (`courier.manage`); while an auto-booking is queued it shows "Booking with Steadfast…" and is disabled; after a failure it reads "Retry booking". A secondary **Ship with another courier** opens the manual ORD-10 form. Without Steadfast only the manual form shows. The server refuses a second booking and a manual ship while a booking is in progress (`booking_in_progress`). |
 
 ### 4.8 Payment verification (PAY)
 
 | ID | Requirement |
 |---|---|
-| PAY-01 | A payment record holds: order, method (bKash, Nagad, COD), amount, sender number, TrxID, status, verified by, verified at, rejection reason, notes. |
-| PAY-02 | Status: **Pending** (bKash/Nagad awaiting check; COD awaiting collection), **Verified**, **Rejected**, **Collected** (COD only, on delivery). |
+| PAY-01 | A payment record holds: order, method (bKash, Nagad, Bank (v1.11), COD), amount, sender number (bKash/Nagad), sender name (Bank), TrxID / reference ID, status, verified by, verified at, rejection reason, notes. |
+| PAY-02 | Status: **Pending** (bKash/Nagad/Bank awaiting check; COD awaiting collection), **Verified**, **Rejected**, **Collected** (COD only, on delivery). |
 | PAY-03 | The owner opens the order, compares the TrxID, sender number, and amount against the bKash/Nagad merchant statement, and marks the payment Verified or Rejected. Rejection requires a reason. |
 | PAY-04 | **Dropped** (SD-12): no automatic amount-mismatch warning. The payment amount is shown beside the order total and staff compare them while verifying. |
 | PAY-05 | TrxID is unique per method across all payments; duplicates are blocked at checkout and flagged to staff if created by editing. |
 | PAY-06 | If a payment is Rejected, the order stays Draft; staff contact the customer by phone and may correct the sender number or TrxID on the payment (the edit keeps the uniqueness check and is noted on the order timeline). There is no customer self-service resubmission. (SD-12) |
 | PAY-07 | **Simplified** (SD-12): Verify, Reject and any TrxID edit are recorded on the order timeline with user, time and note; payment rows keep verified-by and verified-at. There is no separate append-only payment audit table. |
-| PAY-08 | A "payments to verify" queue on the dashboard lists Pending bKash/Nagad payments, oldest first. |
+| PAY-08 | A "payments to verify" queue on the dashboard lists Pending bKash/Nagad/Bank payments, oldest first. |
 
 ### 4.9 Inventory (INV)
 
@@ -409,6 +417,8 @@ One record (singleton) holds all owner/company data. Everything on the storefron
 | ADM-10 | **Audit log** (Owner only): who changed what and when for orders, payments, stock, settings, theme, products, coupons, users and staff permissions. |
 | ADM-11 | **Theme screen** (THM module) under Settings: primary, accent, background and text colour pickers, presets, live preview, save and reset (§4.16). |
 | ADM-12 | The admin browser tab title is `{company name} | Admin Panel`, with the company name taken from Settings (SET-08). |
+| ADM-13 | (v1.11) The product create/edit page has a second **Save** button directly before the SEO section, identical in action to the top one. |
+| ADM-14 | (v1.11) Admin → **SMS log**: newest first, filters by status, source and date range, search by number, pagination, full message on open. Read-only; permission `sms_log.view`. |
 
 ### 4.14 Contact and notifications (NTF)
 
@@ -420,6 +430,11 @@ One record (singleton) holds all owner/company data. Everything on the storefron
 | NTF-04 | Newsletter sign-up (footer): stores email; export to CSV; sending campaigns is **later**. |
 | NTF-05 | **WhatsApp and Messenger links** are shown in the footer Contact column (from Site settings; each hidden when blank), together with the phone number, email and support hours. The header also shows a **WhatsApp** icon (`wa.me/<whatsapp_number>`, which opens the WhatsApp app when installed) and a **Call** icon (`tel:` link to the first support phone) immediately before Track Order, each with a tooltip and each hidden when its number is blank; national numbers (`01…`) are converted to the international form. There is no floating chat button. (v1.6) |
 | NTF-06 | Email and SMS sending runs in the Django-Q2 background queue with retries; failures are logged and never block checkout. (SD-01) |
+| NTF-07 | (v1.11) **SMS log:** every SMS sent through the provider is recorded with date/time, receiver, message, source (Registration OTP, Password reset OTP, Checkout OTP, Order received, Admin test), status (**Pending → In Progress → Sent / Failed**), provider transaction ID and error reason. OTP codes are masked. Logging never blocks or fails a send. |
+| STF-UI-01 | (v1.11) Header logo height: mobile 2.75rem, tablet 3.5rem, desktop 4rem. |
+| STF-UI-02 | (v1.11) Footer shows an icon for each configured social link with a subtle hover lift; footer text is near-white (contrast ≥ 7:1). |
+| STF-UI-03 | (v1.11) Product cards and lazily loaded sections fade in and move up once on entering the viewport (opacity/transform only, one shared observer, off under reduced motion, visible without JS). |
+| STF-UI-04 | (v1.11) Opening a product page starts at the top; back/forward restores the saved position. |
 
 ### 4.15 Storefront pages (STF)
 
@@ -749,6 +764,17 @@ Conventions: pagination `?page=&page_size=`, errors as `{code, message, fields{}
 48. Signature + Standard renders exactly as v1.9 (no `font-size-adjust` applied).
 49. An invalid text size is rejected with 400; a valid change is audited; Reset returns Standard.
 50. The typography audit script reports zero failures for all 27 combinations on the listed pages and widths.
+51. A guest with a new number gets a 4-digit SMS, enters it, and the order is placed; the number is now verified.
+52. The same number orders again as a guest without an OTP.
+53. Three wrong codes kill the code; resend before 60 s is refused; a 6th code in an hour is refused without an SMS.
+54. A guest order without a valid token for an unverified number is rejected (`phone_unverified`).
+55. A Bank order with a reference ID is Draft with a Pending payment in the verify queue; a duplicate reference is refused.
+56. Every SMS appears in Admin → SMS log with source and final status; OTP codes are masked; a gateway failure shows Failed and the customer flow is unaffected.
+57. With auto-book on, Move to Shipping is disabled while booking is queued; afterwards the order is Shipping with the Steadfast code and no second parcel exists.
+58. With auto-book off, Move to Shipping books with Steadfast; "Ship with another courier" ships by hand.
+59. Buy → colour + size → Checkout Now opens checkout with the item; both buttons are disabled until both options are chosen.
+60. On a 375 px phone the hero image shows uncropped and slides change without a blank frame.
+61. Pinch and + / − zoom the product photo; opening a product from a scrolled listing lands at the top.
 
 ---
 
