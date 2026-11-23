@@ -435,6 +435,7 @@ One record (singleton) holds all owner/company data. Everything on the storefron
 | STF-UI-01 | (v1.11) Header logo height: mobile 2.75rem, tablet 3.5rem, desktop 4rem. |
 | STF-UI-02 | (v1.11) Footer shows an icon for each configured social link with a subtle hover lift; footer text is near-white (contrast ≥ 7:1). |
 | STF-UI-03 | (v1.11) Product cards and lazily loaded sections fade in and move up once on entering the viewport, including those on the first screen (inline head script before first paint; opacity/transform only, one shared observer, off under reduced motion, visible without JS). Header shortcut icons get the footer icons' hover (coloured disc, lift). |
+| STF-UI-05 | (v1.11) Contact page: an icon before each detail (address, phone, email, support hours), social icons, and a Google map from **Map latitude / longitude** in Admin → Settings → Contact & social (both empty = drawn placeholder). The cart page notice for a hidden floating bag is a compact warning-style line. |
 | STF-UI-04 | (v1.11) Opening a product page starts at the top; back/forward restores the saved position. |
 
 ### 4.15 Storefront pages (STF)
