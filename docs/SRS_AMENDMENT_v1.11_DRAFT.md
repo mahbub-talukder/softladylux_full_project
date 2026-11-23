@@ -55,7 +55,7 @@ Owner decisions taken 2026-11-23 (all recommended options):
 
 | ID | Change |
 |---|---|
-| CHK-11 (new) | **Guest mobile verification.** Before a guest places an order, the checkout mobile number must be verified with a **4-digit SMS OTP** unless it is already verified (D6). Code valid 5 min; 3 wrong attempts kill a code; resend after 60 s; at most 5 codes per number per hour and 10 per day; per-IP rate limit. The code is stored hashed. A successful check adds the number to **verified phones** and returns a signed token (30 min, bound to the number). `place_order` rejects a guest order with an unverified number and no valid token (`phone_unverified`). |
+| CHK-11 (new) | **Guest mobile verification.** Before a guest places an order, the checkout mobile number must be verified with a **4-digit SMS OTP** unless it is already verified (D6). Code valid 5 min; 3 wrong attempts kill a code; resend after 60 s; at most 5 codes per number per hour and 10 per day; per-IP rate limit. The code is stored hashed. A successful check adds the number to **verified phones**. `place_order` rejects a guest order with an unverified number (`phone_unverified`). Owner switch `checkout_otp_enabled` (Admin → Settings → SMS, default on) so guests can still order while SMS is not set up. |
 | CHK-04 (changed) | Adds **Bank**: the checkout shows bank name, account name, account number, branch and routing number from settings plus the payment instructions. The customer enters the **transaction/reference ID** (letters, digits and `-`, 6–30) and the **account holder name**. Both are required. |
 | PAY-01/02/03/05/08 (changed) | Method list becomes bKash, Nagad, Bank, COD. Bank follows the bKash/Nagad Pending → Verified/Rejected flow and appears in the verify queue. Reference ID is unique per method. |
 | SET (changed) | Admin → Settings → Payments adds Bank fields (bank name, account name, account number, branch, routing number). Bank is hidden at checkout while the account number is empty (§11). |
@@ -85,7 +85,7 @@ Owner decisions taken 2026-11-23 (all recommended options):
 
 - `POST /api/checkout/otp/` `{phone}` → `{status: "sent" | "verified", resend_in}` (`verified` = skip, D6).
 - `POST /api/checkout/otp/verify/` `{phone, code}` → `{token}`.
-- `POST /api/orders/` accepts `phone_token`. It accepts `payment_method: "bank"` with `trx_id` + `sender_name`.
+- `POST /api/checkout/` refuses unverified guest numbers (409 `phone_unverified`). It accepts `payment_method: "bank"` with `trx_id` + `sender_name`.
 - `GET /api/admin/sms-log/?status=&source=&from=&to=&q=&page=`
 - `POST /api/admin/orders/{id}/ship/` is unchanged (manual). The Steadfast book endpoint is unchanged.
 
@@ -94,7 +94,7 @@ Owner decisions taken 2026-11-23 (all recommended options):
 51. A guest with a new number gets a 4-digit SMS, enters it, and the order is placed. The number is now verified.
 52. The same number orders again as a guest: no OTP is asked.
 53. Three wrong codes lock the code. Resend before 60 s is refused. A 6th code in an hour is refused, with no SMS sent.
-54. A guest order posted without a valid token for an unverified number is rejected (`phone_unverified`).
+54. A guest order for an unverified number is rejected (`phone_unverified`).
 55. With bank details set, a customer pays by Bank with a reference ID. The order is Draft with a Pending payment and
     appears in the verify queue. A duplicate reference ID is refused.
 56. Every SMS (OTP, order received, test) appears in Admin → SMS log with source and final status. OTP codes are masked.
@@ -114,7 +114,7 @@ Backend and frontend each get branch `feat/v1.11-client-requests`. Order: models
 admin UI → storefront UI → browser check at 375 px and 1280 px.
 
 1. SMS log (NTF-07, ADM-14): model, logging wrapper in `send_sms(source=…)`, admin page.
-2. Checkout OTP (CHK-11): `otp.py` purpose `checkout` (4-digit, 3 attempts), verified phones, token, checkout step UI.
+2. Checkout OTP (CHK-11): `otp.py` purpose `checkout` (4-digit, 3 attempts), verified phones, owner switch, checkout step UI.
 3. Bank payment (CHK-04, PAY, SET) and payment logos (CHK-12).
 4. Quick storefront items: logo, search order, footer, fade-in-up, product-page scroll.
 5. Carousel (WEB-01, WEB-12).

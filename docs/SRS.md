@@ -296,7 +296,7 @@ One record (singleton) holds all owner/company data. Everything on the storefron
 | CHK-08 | Order number format: `SLL-YYMMDD-NNNN` (daily sequence). Unique, never reused. |
 | CHK-09 | Duplicate-submit protection (idempotency key per checkout attempt). |
 | CHK-10 | COD orders skip payment verification and follow the same Draft → Confirmed flow. The customer pays the courier on delivery; the admin records collection at Delivered. |
-| CHK-11 | (v1.11) **Guest mobile verification:** a guest must verify the checkout number with a **4-digit SMS OTP** before placing an order, unless the number is already verified or belongs to a registered account; logged-in customers skip. Code valid 5 min, 3 wrong attempts kill it, resend after 60 s, at most 5 codes per number per hour and 10 per day, per-IP limit, stored hashed. Success stores the number in verified phones and returns a signed token (30 min, bound to the number); an order from an unverified guest number without a valid token is refused (`phone_unverified`). |
+| CHK-11 | (v1.11) **Guest mobile verification:** a guest must verify the checkout number with a **4-digit SMS OTP** before placing an order, unless the number is already verified or belongs to a registered account; logged-in customers skip. Code valid 5 min, 3 wrong attempts kill it, resend after 60 s, at most 5 codes per number per hour and 10 per day, per-IP limit, stored hashed. Success stores the number in verified phones; an order from an unverified guest number is refused (`phone_unverified`). The owner can switch the check off in Admin → Settings → SMS (`checkout_otp_enabled`, default on), e.g. while SMS is not configured. |
 | CHK-12 | (v1.11) Payment method cards show the official bKash and Nagad marks and a bank icon beside the name. |
 
 ### 4.7 Order management (ORD)
@@ -767,7 +767,7 @@ Conventions: pagination `?page=&page_size=`, errors as `{code, message, fields{}
 51. A guest with a new number gets a 4-digit SMS, enters it, and the order is placed; the number is now verified.
 52. The same number orders again as a guest without an OTP.
 53. Three wrong codes kill the code; resend before 60 s is refused; a 6th code in an hour is refused without an SMS.
-54. A guest order without a valid token for an unverified number is rejected (`phone_unverified`).
+54. A guest order for an unverified number is rejected (`phone_unverified`).
 55. A Bank order with a reference ID is Draft with a Pending payment in the verify queue; a duplicate reference is refused.
 56. Every SMS appears in Admin → SMS log with source and final status; OTP codes are masked; a gateway failure shows Failed and the customer flow is unaffected.
 57. With auto-book on, Move to Shipping is disabled while booking is queued; afterwards the order is Shipping with the Steadfast code and no second parcel exists.
