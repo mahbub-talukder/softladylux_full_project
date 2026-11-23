@@ -214,7 +214,7 @@ Backend paths are under `backend/apps/courier/` unless noted; tests under `apps/
 | THM-31 | `frontend/scripts/typography-audit.js` (dev-only browser audit) | audit run recorded in the v1.10 change record |
 
 ## v1.11 Client requests (SRS v1.11, change record `SRS_AMENDMENT_v1.11_DRAFT.md`)
-Branch `feat/v1.11-client-requests` in both repos. "pending" = not implemented yet on this branch.
+Branch `feat/v1.11-client-requests` in both repos. All v1.11 items implemented (2026-11-24).
 
 | SRS ID | Backend / frontend code | Tests |
 |---|---|---|
@@ -225,16 +225,16 @@ Branch `feat/v1.11-client-requests` in both repos. "pending" = not implemented y
 | CHK-04 (Bank) | `apps/shop/models.py` `PayMethod.BANK`, `Payment.sender_name`, `trx_id` 30 (migration `shop/0004`); `apps/shop/checkout.py` `BANK_REF_RE`, `clean_trx`, `clean_sender_name`, `method_enabled`; `SiteSettings.bank_*` (migration `core/0014`), public settings; `pages/checkout.vue` Bank panel; `pages/admin/settings.vue` Payment tab | `apps/shop/tests/test_checkout.py` (`test_scenario_55…`, `test_bank_*`), `test_api_public.py::test_payment_methods_follow_settings` |
 | PAY-01/02/08 | `apps/shop/orders.py` (`_confirm` needs verified Bank, `edit_payment` `sender_name`), `views_admin.payment_edit`, `serializers.PaymentSerializer`; `reports/services.py` queue; `components/admin/OrderPanel.vue`, `PrintInvoice.vue`, `pages/admin/orders/index.vue` filter | `test_checkout.py::test_bank_order_cannot_confirm_until_verified` |
 | CHK-12 | `frontend/public/payments/bkash.svg` (from bkash.com), `nagad.png` (from nagad.com.bd), bank/cash icons in `pages/checkout.vue` | browser check |
-| ORD-14 | pending | pending |
-| ADM-13 | pending | pending |
-| CAT-10a | pending | pending |
-| CAT-12 (Buy dialog) | pending | pending |
-| CAT-27 | pending | pending |
-| WEB-01 / WEB-12 | pending | pending |
-| STF-UI-01 (logo) | pending | pending |
-| STF-UI-02 (footer) | pending | pending |
-| STF-UI-03 (fade-in-up) | pending | pending |
-| STF-UI-04 (scroll top) | pending | pending |
+| ORD-14 | `backend/apps/courier/models.py` `Shipment.queued_at`, `booking_in_progress` (migration `courier/0003`), `apps/courier/services.py` (`queue_auto_book`, `ready`, `_mark_booked`/`_mark_failed` clear the flag), `apps/shop/orders.py` `_refuse_while_booking`, `apps/shop/serializers.py` `steadfast_ready`; `frontend/components/admin/OrderPanel.vue` (Move to Shipping books with Steadfast, "Booking with Steadfast…" poll, Ship with another courier), `components/admin/CourierBlock.vue` | `apps/courier/tests/test_move_to_shipping.py` (5 tests) |
+| ADM-13 | `frontend/pages/admin/products/[id].vue` (bottom Save before SEO, same `save(false)`) | browser check (2026-11-24) |
+| CAT-10a | `frontend/components/store/StoreSearch.vue` (`order-1/2` below md) | browser check |
+| CAT-12 (Buy dialog) | `frontend/components/store/ProductCard.vue` (Buy button), `components/store/StoreBuyDialog.vue`, `composables/useBuyDialog.ts`, `composables/buySelection.ts`, `components/store/StoreShell.vue` | `frontend/tests/buyDialog.test.ts`; `tests/quickAdd.test.ts` (shared helpers); browser check 375 px |
+| CAT-27 | `frontend/components/store/ProductZoom.vue`, `pages/product/[slug].vue` | browser check (buttons, 200 %, reset) |
+| WEB-01 / WEB-12 | `frontend/components/store/HomeHero.vue` (slides keyed by id, `.hero-box` aspect ratio + contain below 640 px) | browser check: DOM nodes persist across a slide move |
+| STF-UI-01 (logo) | `frontend/components/store/StoreHeader.vue` (`logoH`, header heights) | browser check |
+| STF-UI-02 (footer) | `frontend/components/store/StoreFooter.vue`, `utils/socialIcons.ts`, `assets/css/tokens.css` (`--brand-*`) | `tests/tracking.test.ts` (footer_social_*), browser check |
+| STF-UI-03 (fade-in-up) | `frontend/plugins/reveal.ts`, `assets/css/main.css` (`.reveal`), `ProductCard.vue`, `StoreSection.vue` | browser check |
+| STF-UI-04 (scroll top) | `frontend/app/router.options.ts` | typecheck; manual check on a phone recommended |
 
 | Scenario | Tests |
 |---|---|
@@ -243,7 +243,7 @@ Branch `feat/v1.11-client-requests` in both repos. "pending" = not implemented y
 | 54 | `test_checkout_otp.py::test_scenario_54_unverified_guest_order_refused` |
 | 55 | `test_checkout.py::test_scenario_55_bank_order_pending_and_duplicate_ref_refused` |
 | 56 | `test_sms_log.py` (all) |
-| 57, 58 | pending (ORD-14) |
-| 59 | pending (CAT-12) |
-| 60 | pending (WEB-12) |
-| 61 | pending (CAT-27, STF-UI-04) |
+| 57, 58 | `apps/courier/tests/test_move_to_shipping.py` |
+| 59 | `frontend/tests/buyDialog.test.ts`; browser: Buy → size → Checkout Now opened /checkout with the item |
+| 60 | browser check at 375 px |
+| 61 | browser check (zoom buttons); pinch needs a real touch device |
