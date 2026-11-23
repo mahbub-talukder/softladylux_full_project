@@ -144,6 +144,7 @@ The frontend is a Nuxt 3 (Vue 3) application with server-side rendering for the 
 | `courier.view` | Courier dashboard, Steadfast parcel lists and return requests (v1.7) | ✔ |
 | `courier.manage` | Book or retry Steadfast parcels, bulk booking, refresh, pickup and return requests (v1.7) | – |
 | `sms_log.view` | View the SMS log (v1.11) | – |
+| `sms.send` | Send a one-off SMS from the SMS log page (v1.11; implies `sms_log.view`) | – |
 
 **Owner-only (cannot be delegated):** create and deactivate Staff, reset passwords, edit permissions, and view the audit log.
 
@@ -418,7 +419,7 @@ One record (singleton) holds all owner/company data. Everything on the storefron
 | ADM-11 | **Theme screen** (THM module) under Settings: primary, accent, background and text colour pickers, presets, live preview, save and reset (§4.16). |
 | ADM-12 | The admin browser tab title is `{company name} | Admin Panel`, with the company name taken from Settings (SET-08). |
 | ADM-13 | (v1.11) The product create/edit page has a second **Save** button directly before the SEO section, identical in action to the top one. |
-| ADM-14 | (v1.11) Admin → **SMS log**: newest first, filters by status, source and date range, search by number, pagination, full message on open. Read-only; permission `sms_log.view`. |
+| ADM-14 | (v1.11) Admin → **SMS log**: newest first, filters by status, source and date range, search by number, pagination, full message on open. Permission `sms_log.view`. A **Send SMS** button (permission `sms.send`) opens a dialog with recipient number and message (max 640 characters, live SMS-part count); the SMS is sent at once, logged as source "Admin (manual)", audited (number only) and rate-limited (30 per hour). |
 
 ### 4.14 Contact and notifications (NTF)
 
