@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 # SoftLadyLux: one-command production deploy, run from your LOCAL machine (project root or anywhere).
+
+# later code-only redeploy: never touches prod data
+#./deploy/deploy.sh --from 03 --skip-data   
+
+
+
+##################################################3
 #
 #   ./deploy/deploy.sh                     run every stage; on a re-run, resume where it failed
 #   ./deploy/deploy.sh --status            show which stages are done
